@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f4f3ef" />
+    <title>NSP Control — паспорт проекта</title>
+    <meta name="description" content="Интерактивная карта и технический паспорт IT-проекта." />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="NSP Control">
+          <span class="brand-mark">N</span>
+          <span class="brand-copy"><strong>NSP</strong><span>Control</span></span>
+        </a>
+
+        <div class="topbar-actions">
+          <button class="button ghost" id="agentPromptButton" type="button">
+            <span class="button-icon">⌁</span> Промпт для агента
+          </button>
+          <button class="button ghost desktop-only" id="importButton" type="button">Импорт</button>
+          <button class="button primary" id="exportButton" type="button">Выгрузить отчёт</button>
+          <button class="icon-button mobile-menu" id="mobileMenuButton" type="button" aria-label="Открыть структуру">☰</button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="tree-panel" id="treePanel">
+          <div class="project-heading">
+            <label for="projectName">Проект</label>
+            <input id="projectName" value="Новый проект" autocomplete="off" />
+          </div>
+
+          <div class="progress-card">
+            <div class="progress-meta">
+              <span>Заполнено</span>
+              <strong id="progressValue">0%</strong>
+            </div>
+            <div class="progress-track"><span id="progressBar"></span></div>
+            <p id="progressHint">Начните с паспорта проекта</p>
+          </div>
+
+          <div class="tree-toolbar">
+            <div class="search-wrap">
+              <span>⌕</span>
+              <input id="treeSearch" type="search" placeholder="Найти раздел" aria-label="Найти раздел" />
+            </div>
+          </div>
+
+          <nav class="tree" id="tree" aria-label="Структура проекта"></nav>
+
+          <div class="tree-footer">
+            <span class="save-indicator"><i></i><span id="saveState">Сохранено локально</span></span>
+            <button class="text-button" id="resetButton" type="button">Очистить</button>
+          </div>
+        </aside>
+
+        <section class="content-panel">
+          <div class="content-inner">
+            <div class="section-kicker" id="sectionKicker">Паспорт проекта</div>
+            <div class="section-title-row">
+              <div>
+                <h1 id="sectionTitle">Общая информация</h1>
+                <p id="sectionDescription">Короткая точка входа в проект: зачем он нужен и кто за него отвечает.</p>
+              </div>
+              <div class="section-score" id="sectionScore"><strong>0%</strong><span>заполнено</span></div>
+            </div>
+
+            <div class="section-controls">
+              <label class="switch-row">
+                <input type="checkbox" id="notApplicable" />
+                <span class="switch"><i></i></span>
+                <span>Раздел не используется</span>
+              </label>
+              <span class="autosave-note">Изменения сохраняются автоматически</span>
+            </div>
+
+            <form id="sectionForm" class="section-form"></form>
+
+            <div class="section-nav">
+              <button class="button ghost" id="prevButton" type="button">← Назад</button>
+              <button class="button dark" id="nextButton" type="button">Следующий раздел →</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="exportModal" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
+        <button class="modal-close" type="button" data-close="exportModal" aria-label="Закрыть">×</button>
+        <span class="modal-eyebrow">Экспорт</span>
+        <h2 id="exportTitle">Готовый паспорт проекта</h2>
+        <p>Markdown подойдёт для документации, JSON — для продолжения работы в NSP Control.</p>
+        <div class="export-options">
+          <button class="export-card" id="downloadMd" type="button"><span>MD</span><strong>Markdown-отчёт</strong><small>Читаемый документ</small></button>
+          <button class="export-card" id="downloadJson" type="button"><span>{ }</span><strong>Данные проекта</strong><small>Резервная копия и импорт</small></button>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="importModal" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+        <button class="modal-close" type="button" data-close="importModal" aria-label="Закрыть">×</button>
+        <span class="modal-eyebrow">Импорт</span>
+        <h2 id="importTitle">Загрузить данные</h2>
+        <p>Выберите JSON из NSP Control или вставьте JSON, подготовленный агентом.</p>
+        <label class="file-button">Выбрать JSON-файл<input id="jsonFileInput" type="file" accept="application/json,.json" /></label>
+        <div class="or"><span>или</span></div>
+        <textarea id="jsonPaste" class="code-area" placeholder="Вставьте JSON сюда…" spellcheck="false"></textarea>
+        <button class="button primary full" id="applyJson" type="button">Импортировать данные</button>
+        <p class="form-error" id="importError"></p>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="promptModal" hidden>
+      <section class="modal prompt-modal" role="dialog" aria-modal="true" aria-labelledby="promptTitle">
+        <button class="modal-close" type="button" data-close="promptModal" aria-label="Закрыть">×</button>
+        <span class="modal-eyebrow">Agent handoff</span>
+        <h2 id="promptTitle">Промпт для анализа проекта</h2>
+        <p>Запустите агента в корне проекта. Он сначала соберёт факты, затем задаст только недостающие вопросы.</p>
+        <textarea id="agentPrompt" class="code-area prompt-area" readonly></textarea>
+        <div class="modal-actions">
+          <button class="button ghost" id="downloadPrompt" type="button">Скачать .md</button>
+          <button class="button primary" id="copyPrompt" type="button">Скопировать промпт</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>
